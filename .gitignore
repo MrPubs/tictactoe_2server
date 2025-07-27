@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.*.local
+
+# Testing
+coverage/
+.nyc_output/
+
+# Editor junk
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Build artifacts
+dist/
+build/
+tmp/
+temp/
+
+# Optional: lockfiles if you're not using that manager
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Docker
+*.local
+docker-compose.override.yml

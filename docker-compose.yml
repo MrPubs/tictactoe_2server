@@ -1,0 +1,32 @@
+services:
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+
+  serverA:
+    build:
+      context: ./server
+      dockerfile: ../docker/server.dockerfile
+    image: tictactoe-servera
+    container_name: serverA
+    environment:
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - redis
+
+  serverB:
+    build:
+      context: ./server
+      dockerfile: ../docker/server.dockerfile
+    image: tictactoe-serverb
+    container_name: serverB
+    environment:
+      - PORT=3002
+    ports:
+      - "3002:3002"
+    depends_on:
+      - redis

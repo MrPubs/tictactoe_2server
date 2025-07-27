@@ -1,0 +1,33 @@
+# Node dependencies
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Environment files
+.env
+.env.*.local
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor/project files
+.vscode
+.idea
+*.sublime-project
+*.sublime-workspace
+
+# Test/output
+coverage
+dist
+build
+tmp
