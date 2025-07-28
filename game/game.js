@@ -9,6 +9,7 @@ class GameInstance {
         this.currentPlayer = 'x';
         this.winner = null;
         this.gameLock = false;
+        this.players = { x: null, o: null };
     };
 
     // Restart game
@@ -110,9 +111,32 @@ class GameInstance {
                 this.gameLock = false
                 console.log('\n')
             };
+            
+            return true;
         }
         else {return false}; 
     };
+
+    toJSON() {
+        return {
+            board_repr: this.board.board_repr,
+            currentPlayer: this.currentPlayer,
+            winner: this.winner,
+            gameLock: this.gameLock,
+            players: this.players
+        };
+    };
+
+    static fromJSON(data) {
+        const instance = new GameInstance();
+        instance.board.board_repr = data.board_repr;
+        instance.currentPlayer = data.currentPlayer;
+        instance.winner = data.winner;
+        instance.gameLock = data.gameLock;
+        instance.players = data.players || { x: null, o: null };
+        return instance;
+    };
+
 };
 
 class Board {
@@ -150,3 +174,5 @@ class Board {
         }).join('\n');
     }
 }
+
+module.exports = GameInstance;
