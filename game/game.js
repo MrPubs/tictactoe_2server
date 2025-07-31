@@ -9,7 +9,6 @@ class GameInstance {
         this.currentPlayer = 'x';
         this.winner = null;
         this.gameLock = false;
-        this.players = { x: null, o: null };
     };
 
     // Restart game
@@ -123,7 +122,6 @@ class GameInstance {
             currentPlayer: this.currentPlayer,
             winner: this.winner,
             gameLock: this.gameLock,
-            players: this.players
         };
     };
 
@@ -133,7 +131,6 @@ class GameInstance {
         instance.currentPlayer = data.currentPlayer;
         instance.winner = data.winner;
         instance.gameLock = data.gameLock;
-        instance.players = data.players || { x: null, o: null };
         return instance;
     };
 

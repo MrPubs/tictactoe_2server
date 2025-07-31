@@ -11,9 +11,8 @@ class ClientInstance {
         // Setup Connection
         this.serverUrl = `ws://localhost:${port}`;
         this.ws = new WebSocket(this.serverUrl);
-        this.client_id = null;
-        this.options = ['show games', 'new game', 'join game']
 
+        // Setup callbacks
         this._setupWebSocketCallbacks();
     }
 
@@ -29,10 +28,12 @@ class ClientInstance {
 
         // Announce
         console.log('Connected to server');
+
+        // Start interaction loop
+        this._sendMessage(['show games', 'new game', 'join game'])
     }
 
     _handleClose() {
-        this.ws.send()
         console.log('Connection closed');
     }
 
@@ -44,77 +45,133 @@ class ClientInstance {
 
         // Receive Comms From Server
         const data = JSON.parse(msg);
+
+        // handle
+        let options;
         switch (data.type) {
-            
-            // Notify whats the client id
-            case 'client_id':
-                this.client_id = data.id;
-                break;
-            
-            case 'winner':
-                console.log("You won!");
-                this.options = data.options;
+
+            case 'response':
+                switch (data.payload.action) {
+                    
+                    // fetched existing games list
+                    case 'existing games fetched':
+                        console.log(`Existing games: ${data.payload.game_ids}`);
+                        options = ['show games', 'new game', 'join game'];
+                        break;
+                    
+                    // created new game
+                    case 'new game created':
+                        console.log(`New game created: ${data.payload.game_id}`);
+                        options = ['show games', 'new game', 'join game'];
+                        break;
+
+                    // joined game
+                    case 'game joined':
+
+                        // Test if succesfully joined
+                        switch (data.payload.status) {
+                            
+                            case 'OK':
+                                console.log(`Succesfully joined game as ${data.payload.sign}!`);
+                                break;
+
+                            case 'NO':
+                                console.log(`Failed to join game - game Full!`);
+                                options = ['show games', 'new game', 'join game'];
+                                break;
+                        };
+                        break;
+                    
+                    // move requested
+                    case 'make move':
+                        if (data.payload.boardrepr) {
+                            console.log(data.payload.boardrepr);
+                        } 
+                        options = ['move', 'exit'];
+                        break;
+                    
+                    // you won
+                    case 'winner':
+                        console.log(data.payload.message);
+                        options = data.payload.options;
+                        options = ['show games', 'new game', 'join game'];
+                        break;
+
+                    // you left
+                    case 'leaver':
+                        console.log(data.payload.message);
+                        options = data.payload.options;
+                        options = ['show games', 'new game', 'join game'];
+                        break;
+
+                    // you lost
+                    case 'loser':
+                        console.log(data.payload.message);
+                        options = data.payload.options;
+                        options = ['show games', 'new game', 'join game'];
+                        break;
+
+                    default:
+                        console.log(`default: ${data.payload.action}`)
+
+                };
                 break;
 
-            case 'existing_games':
-                console.log(`Existing Games: ${data.message}`);
-                break;
-
-            case 'game_created':
-                const createdGame = data.message;
-                break;
-            
-            case 'joined_game':
-                console.log(data.boardrepr)
-                this.options = data.options
-                break;
-            
-            case 'left_game':
-                this.options = data.options
-                break;
-
-            case 'error':
-                console.log(data.message)
-                break;
-            
-            case 'your_turn':
-                console.log(data.boardrepr)
+            case 'notification':
+                console.log(data.payload.boardrepr);
+                console.log(data.payload.content);
                 break;
 
             default:
-                console.log("idk..");
+                console.log(`default: ${data.type}`)
                 break;
-        };
+            };
+        
+        // if expects a request provoke it
+        if (data.payload.provoke_request) {this._sendMessage(options)};
+    };
+
+    _sendMessage(options) {
 
         // Send Comms To Server
-        const action = readlineSync.question(`Choose action [${this.options}]: `)
+        let option_validated = false;
+        let action;
+        while (!option_validated) {
+            
+            action = readlineSync.question(`Choose action [${options}]: `);
+            if (options.includes(action)) {option_validated = true} else {console.log('Invalid choice!')};
+        };
         switch (action) {
             
+            // Ask for all existing game ids
             case 'show games':
-                this.ws.send(JSON.stringify({ type: action }));
+                this.ws.send(JSON.stringify( {type: 'request', payload:{action:'show games'}} ))
                 break;
-
+            
+            // Ask for server to create new game
             case 'new game':
-                this.ws.send(JSON.stringify({ type: action, payload: {client_id: this.client_id}}));
+                this.ws.send(JSON.stringify( {type: 'request', payload:{action:'new game'}} ))
                 break;
-
+        
+            // Ask server to join game by game id
             case 'join game':
-                const game_id = readlineSync.question(`Choose game id: `)
-                this.ws.send(JSON.stringify({ type: action, payload: {client_id: this.client_id, game_id: game_id}}));
-                break;
 
+                const game_id = readlineSync.question(`Game ID to Join to: `);
+                this.ws.send(JSON.stringify( {type: 'request', payload:{action:'join game', game_id:game_id}} ));
+                break;
+            
             case 'move':
-                const row = readlineSync.question(`Choose row: `);
-                const col = readlineSync.question(`Choose col: `);
-
-                this.ws.send(JSON.stringify({type: action, payload:{client_id:this.client_id, row:row, col:col}}))
+                const row = readlineSync.question(`Row: `)
+                const col = readlineSync.question(`col: `)
+                this.ws.send(JSON.stringify( {type: 'request', payload:{action:'move', row:row, col:col}} ));
                 break;
-
+            
             case 'exit':
-                this.ws.send(JSON.stringify({ type: action, payload: {client_id: this.client_id}}))
+                this.ws.send(JSON.stringify( {type: 'request', payload:{action:'exit'}} ))
                 break;
 
-                
+            default:
+                this.ws.send(JSON.stringify( {type: 'default', payload:'default'} ))
         };
     };
 };
